@@ -139,7 +139,7 @@
         });
       //run obfuscated code
       document.querySelector("#result-run").addEventListener("click", () => {
-        eval(document.getElementById("result-code").innerText);
+        eval(obfuscate("alert('I`m obfuscated!!!');"));
       });
 
       //drag and drop handler
@@ -169,9 +169,9 @@
           }
           const fileReader = new FileReader();
           fileReader.addEventListener("load", function (event) {
-            console.log(fileReader.result);
+            // console.log(fileReader.result);
             obfuscateResult = obfuscate(fileReader.result);
-            console.log(obfuscateResult);
+            // console.log(obfuscateResult);
           });
           fileReader.addEventListener("error", function (e) {
             console.log({ e });
