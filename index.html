@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Obfuscate it</title>
+    <script src="./js-obfuscator.js"></script>
+    <style>
+      html {
+        /* color-scheme: dark light; */
+      }
+      body {
+        font-family: sans-serif;
+        box-sizing: border-box;
+      }
+      #app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* justify-content: center; */
+        height: 100vh;
+        font-size: 1.2rem;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      .test {
+        border: 1px solid gray;
+        padding: 1rem;
+        margin-top: 1rem;
+        width: 100%;
+        color: rgb(60, 60, 60);
+        box-sizing: border-box;
+        border-radius: 1rem;
+      }
+      pre {
+        display: inline-block;
+        background-color: #eafadf;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      code {
+        text-wrap: wrap;
+        font-size: 1rem;
+      }
+      #result {
+        visibility: hidden;
+        height: 0;
+      }
+      .test p {
+        margin: 0.5rem 0;
+      }
+      .test button {
+        padding: 0.5rem;
+      }
+      #obfuscator {
+        height: 450px;
+        width: 100%;
+        background-color: #eafadf;
+        background-image: url("./mixer.webp");
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        text-align: right;
+        border-radius: 1rem;
+        border: 2px solid red;
+      }
+      #obfuscator img {
+        /* object-fit: contain;
+        width: 500px; */
+      }
+      #action-text {
+        /* position: relative; */
+        /* top: 20px; */
+        /* right: 10px; */
+        /* left: 300px; */
+        /* transform: translate(-50%, -50%); */
+        font-size: 2rem;
+        font-weight: 900;
+        color: #c00909;
+        text-shadow: rgb(255, 255, 255) 2px 2px 2px;
+        padding: 0.5rem;
+      }
+      #footer {
+        padding: 0.5rem 0;
+        font-size: 0.8rem;
+      }
+      #download {
+        padding: 0.5rem;
+        background-color: #c00909;
+        color: #fff;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        display: none;
+        position: relative;
+        top: 330px;
+        width: 150px;
+        left: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- <h2>Drop JS file to obfuscate</h2> -->
+      <div id="obfuscator">
+        <div id="action-text">Drop JS file here</div>
+        <div id="download">Download result</div>
+        <!-- <img src="./mixer.webp" alt="Mixer" /> -->
+      </div>
+      <div class="test">
+        <div>
+          <p>Test code:</p>
+          <pre><code id="test-code">alert('I`m obfuscated!!!');</code></pre>
+          <button id="obfuscate-test">Obfuscate it</button>
+        </div>
+        <div id="result">
+          <p>Obfuscated code:</p>
+          <pre><code id="result-code"></code></pre>
+          <button id="result-run">Run obfuscated code</button>
+        </div>
+      </div>
+      <div id="footer">
+        Used obfuscation code from
+        <a href="https://github.com/nbsp1221/javascript-obfuscator"
+          >javascript-obfuscator</a
+        >
+      </div>
+    </div>
+
+    <script>
+      //obfuscate test code
+      document
+        .querySelector("#obfuscate-test")
+        .addEventListener("click", () => {
+          const obfuscateResult = obfuscate(
+            document.getElementById("test-code").innerText
+          );
+          document.getElementById("result-code").innerHTML = obfuscateResult;
+          document.getElementById("result").style.visibility = "visible";
+          document.getElementById("result").style.height = "auto";
+        });
+      //run obfuscated code
+      document.querySelector("#result-run").addEventListener("click", () => {
+        eval(document.getElementById("result-code").innerText);
+      });
+
+      //drag and drop handler
+      function usePreventDefault(event) {
+        event.preventDefault();
+      }
+
+      document
+        .querySelector("#obfuscator")
+        .addEventListener("dragover", usePreventDefault);
+      document
+        .querySelector("#obfuscator")
+        .addEventListener("dragenter", usePreventDefault);
+
+      //drag and drop and obfuscate
+      let obfuscateResult;
+      const obfuscator = document
+        .querySelector("#obfuscator")
+        .addEventListener("drop", (event) => {
+          event.preventDefault();
+          const fileList = event.dataTransfer.files;
+          const fileA = fileList[0];
+          console.log(fileA);
+          if (fileA.type !== "text/javascript") {
+            console.log("Wrong file type");
+            return;
+          }
+          const fileReader = new FileReader();
+          fileReader.addEventListener("load", function (event) {
+            console.log(fileReader.result);
+            obfuscateResult = obfuscate(fileReader.result);
+            console.log(obfuscateResult);
+          });
+          fileReader.addEventListener("error", function (e) {
+            console.log({ e });
+          });
+          fileReader.addEventListener("progress", function (e) {
+            console.log("Progress", { e });
+          });
+          // console.log(fileReader);
+
+          //crate a downloaded link
+          function download(content, mimeType, filename) {
+            const a = document.createElement("a");
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            a.setAttribute("href", url);
+            a.setAttribute("download", filename);
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+          fileReader.readAsText(fileA);
+          //button download
+          const downloadBtn = document.getElementById("download");
+          downloadBtn.style.display = "block";
+          downloadBtn.addEventListener("click", () => {
+            download(
+              obfuscateResult,
+              "text/javascript",
+              "obfuscated-" + fileA.name
+            );
+            downloadBtn.style.display = "none";
+          });
+          // download(obfuscateResult, "text/javascript", "obfuscated.js");
+        });
+    </script>
+  </body>
+</html>
